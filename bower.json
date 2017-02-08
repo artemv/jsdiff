@@ -1,0 +1,8 @@
+{
+  "name": "jsdiff",
+  "main": [
+    "diff.js"
+  ],
+  "dependencies": {},
+  "ignore": []
+}
