@@ -34,8 +34,8 @@ export function applyPatch(source, uniDiff, options = {}) {
   function hunkFits(hunk, toPos) {
     for (let j = 0; j < hunk.lines.length; j++) {
       let line = hunk.lines[j],
-          operation = line[0],
-          content = line.substr(1);
+          operation = (line.length > 0 ? line[0] : ' '),
+          content = (line.length > 0 ? line.substr(1) : line);
 
       if (operation === ' ' || operation === '-') {
         // Context sanity check
@@ -79,15 +79,20 @@ export function applyPatch(source, uniDiff, options = {}) {
   }
 
   // Apply patch hunks
+  let diffOffset = 0;
   for (let i = 0; i < hunks.length; i++) {
     let hunk = hunks[i],
-        toPos = hunk.offset + hunk.newStart - 1;
-    if (hunk.newLines == 0) { toPos++; }
+        toPos = hunk.oldStart + hunk.offset + diffOffset - 1;
+    diffOffset += hunk.newLines - hunk.oldLines;
+
+    if (toPos < 0) { // Creating a new file
+      toPos = 0;
+    }
 
     for (let j = 0; j < hunk.lines.length; j++) {
       let line = hunk.lines[j],
-          operation = line[0],
-          content = line.substr(1),
+          operation = (line.length > 0 ? line[0] : ' '),
+          content = (line.length > 0 ? line.substr(1) : line),
           delimiter = hunk.linedelimiters[j];
 
       if (operation === ' ') {

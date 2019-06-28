@@ -66,7 +66,7 @@ Diff.prototype = {
           basePath = clonePath(removePath);
           self.pushComponent(basePath.components, undefined, true);
         } else {
-          basePath = addPath;   // No need to clone, we've pulled it from the list
+          basePath = addPath; // No need to clone, we've pulled it from the list
           basePath.newPos++;
           self.pushComponent(basePath.components, true, undefined);
         }
@@ -144,8 +144,12 @@ Diff.prototype = {
   },
 
   equals(left, right) {
-    return left === right
-      || (this.options.ignoreCase && left.toLowerCase() === right.toLowerCase());
+    if (this.options.comparator) {
+      return this.options.comparator(left, right);
+    } else {
+      return left === right
+        || (this.options.ignoreCase && left.toLowerCase() === right.toLowerCase());
+    }
   },
   removeEmpty(array) {
     let ret = [];
@@ -208,10 +212,12 @@ function buildValues(diff, components, newString, oldString, useLongestToken) {
     }
   }
 
-  // Special case handle for when one terminal is ignored. For this case we merge the
-  // terminal into the prior string and drop the change.
+  // Special case handle for when one terminal is ignored (i.e. whitespace).
+  // For this case we merge the terminal into the prior string and drop the change.
+  // This is only available for string mode.
   let lastComponent = components[componentLen - 1];
   if (componentLen > 1
+      && typeof lastComponent.value === 'string'
       && (lastComponent.added || lastComponent.removed)
       && diff.equals('', lastComponent.value)) {
     components[componentLen - 2].value += lastComponent.value;

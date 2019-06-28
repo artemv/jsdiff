@@ -13,7 +13,7 @@ export function parsePatch(uniDiff, options = {}) {
       let line = diffstr[i];
 
       // File header found, end parsing diff metadata
-      if (/^(\-\-\-|\+\+\+|@@)\s/.test(line)) {
+      if ((/^(\-\-\-|\+\+\+|@@)\s/).test(line)) {
         break;
       }
 
@@ -37,9 +37,9 @@ export function parsePatch(uniDiff, options = {}) {
     while (i < diffstr.length) {
       let line = diffstr[i];
 
-      if (/^(Index:|diff|\-\-\-|\+\+\+)\s/.test(line)) {
+      if ((/^(Index:|diff|\-\-\-|\+\+\+)\s/).test(line)) {
         break;
-      } else if (/^@@/.test(line)) {
+      } else if ((/^@@/).test(line)) {
         index.hunks.push(parseHunk());
       } else if (line && options.strict) {
         // Ignore unexpected content unless in strict mode
@@ -53,12 +53,16 @@ export function parsePatch(uniDiff, options = {}) {
   // Parses the --- and +++ headers, if none are found, no lines
   // are consumed.
   function parseFileHeader(index) {
-    const headerPattern = /^(---|\+\+\+)\s+([\S ]*)(?:\t(.*?)\s*)?$/;
-    const fileHeader = headerPattern.exec(diffstr[i]);
+    const fileHeader = (/^(---|\+\+\+)\s+(.*)$/).exec(diffstr[i]);
     if (fileHeader) {
       let keyPrefix = fileHeader[1] === '---' ? 'old' : 'new';
-      index[keyPrefix + 'FileName'] = fileHeader[2];
-      index[keyPrefix + 'Header'] = fileHeader[3];
+      const data = fileHeader[2].split('\t', 2);
+      let fileName = data[0].replace(/\\\\/g, '\\');
+      if ((/^".*"$/).test(fileName)) {
+        fileName = fileName.substr(1, fileName.length - 2);
+      }
+      index[keyPrefix + 'FileName'] = fileName;
+      index[keyPrefix + 'Header'] = (data[1] || '').trim();
 
       i++;
     }
@@ -91,7 +95,7 @@ export function parsePatch(uniDiff, options = {}) {
             && diffstr[i + 2].indexOf('@@') === 0) {
           break;
       }
-      let operation = diffstr[i][0];
+      let operation = (diffstr[i].length == 0 && i != (diffstr.length - 1)) ? ' ' : diffstr[i][0];
 
       if (operation === '+' || operation === '-' || operation === ' ' || operation === '\\') {
         hunk.lines.push(diffstr[i]);

@@ -13,3 +13,5 @@ Gruntfile.js
 index.html
 karma.conf.js
 style.css
+.babelrc
+yarn.lock

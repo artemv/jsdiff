@@ -180,6 +180,23 @@ describe('patch/apply', function() {
           + ' line4\n'
           + ' line4\n'))
         .to.equal('line1\nline2\nline3\nline4\nline4\nline4\nline4');
+
+      // Test empty lines in patches
+      expect(applyPatch(
+          'line11\nline2\n\nline4',
+
+            'Index: test\n'
+            + '===================================================================\n'
+            + '--- test\theader1\n'
+            + '+++ test\theader2\n'
+            + '@@ -1,4 +1,4 @@\n'
+            + '+line1\n'
+            + '-line11\n'
+            + ' line2\n'
+            + '\n'
+            + ' line4\n'
+            + '\\ No newline at end of file\n'))
+        .to.equal('line1\nline2\n\nline4');
     });
 
     it('should apply patches', function() {
@@ -414,6 +431,68 @@ describe('patch/apply', function() {
           + 'line3\n'
           + 'line4\n'
           + 'line5\n');
+    });
+
+    it('should succeed when 1st hunk specifies invalid newStart', function() {
+      expect(applyPatch(
+          'line1\n'
+          + 'line2\n'
+          + 'line3\n'
+          + 'line5\n',
+
+          '--- test\theader1\n'
+          + '+++ test\theader2\n'
+          + '@@ -1,2 +2,3 @@\n'
+          + ' line3\n'
+          + '+line4\n'
+          + ' line5\n'))
+        .to.equal(
+          'line1\n'
+          + 'line2\n'
+          + 'line3\n'
+          + 'line4\n'
+          + 'line5\n');
+    });
+
+    it('should succeed when 2nd hunk specifies invalid newStart', function() {
+      expect(applyPatch(
+          'line1\n'
+          + 'line2\n'
+          + 'line3\n'
+          + 'line5\n',
+
+          '--- test\theader1\n'
+          + '+++ test\theader2\n'
+          + '@@ -1,3 +1,2 @@\n'
+          + ' line1\n'
+          + '-line2\n'
+          + ' line3\n'
+          + '@@ -3,2 +3,3 @@\n'
+          + ' line3\n'
+          + '+line4\n'
+          + ' line5\n'))
+        .to.equal(
+          'line1\n'
+          + 'line3\n'
+          + 'line4\n'
+          + 'line5\n');
+    });
+
+    it('should create a file', function() {
+      expect(applyPatch('',
+
+          '--- test\theader1\n'
+          + '+++ test\theader2\n'
+          + '@@ -0,0 +1,4 @@\n'
+          + '+line1\n'
+          + '+line2\n'
+          + '+line3\n'
+          + '+line4\n'))
+        .to.equal(
+          'line1\n'
+          + 'line2\n'
+          + 'line3\n'
+          + 'line4\n');
     });
 
     it('should erase a file', function() {
